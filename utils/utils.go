@@ -19,7 +19,7 @@ func init() {
 	loggers = make(map[string]*log.Logger)
 }
 
-func getConfigDir() (string, error) {
+func GetConfigDir() (string, error) {
 	configDir := path.Join(os.Getenv("HOME"), ".config/go-telegram-bot")
 
 	info, err := os.Stat(configDir)
@@ -31,7 +31,7 @@ func getConfigDir() (string, error) {
 }
 
 func GetConfigData(configFile string) (string, error) {
-	configDir, err := getConfigDir()
+	configDir, err := GetConfigDir()
 	if err != nil {
 		return configDir, err
 	}
@@ -60,7 +60,7 @@ func GetLogger(key string) *log.Logger {
 	}
 
 	if logFile == nil {
-		configDir, err := getConfigDir()
+		configDir, err := GetConfigDir()
 		if err != nil {
 			return nil
 		}
