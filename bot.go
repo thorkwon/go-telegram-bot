@@ -7,6 +7,7 @@ import (
 
 	"github.com/thorkwon/go-telegram-bot/service"
 	"github.com/thorkwon/go-telegram-bot/utils"
+	"github.com/thorkwon/go-telegram-bot/watch"
 )
 
 var log = utils.GetLogger("main")
@@ -15,12 +16,50 @@ func init() {
 	// utils.EnableDebugLog("main")
 }
 
+type infoArg struct {
+	service *service.ServiceBot
+	chatID  int64
+}
+
+func sendClipboardToChat(data string, arg interface{}) {
+	var info *infoArg = arg.(*infoArg)
+
+	log.Debug("call sendClipboardToChat")
+	log.Debug("data :", data)
+
+	info.service.SendMsg(info.chatID, data, false, 0)
+}
+
+func getPrivateChatID(service *service.ServiceBot) int64 {
+	chats := service.GetChat()
+	adminUser := service.GetAdminUser()
+	var ret int64
+
+	for key, val := range chats {
+		log.Debug("call getPrivateChatID :", key, val)
+		if val.UserName == adminUser && val.ChatType == "private" {
+			ret = key
+		}
+	}
+
+	return ret
+}
+
 func main() {
 	service := service.NewServiceBot()
+	var clipboardWatcher *watch.ClipboardWatcher
 
 	err := service.Start()
 	if err != nil {
 		log.Panicln(err)
+	}
+
+	chatID := getPrivateChatID(service)
+	if chatID == 0 {
+		log.Error("No such private chat")
+	} else {
+		info := &infoArg{service: service, chatID: chatID}
+		clipboardWatcher = watch.ClipboardPolling(sendClipboardToChat, info)
 	}
 
 	// Exit
@@ -28,6 +67,7 @@ func main() {
 	signal.Notify(doneExit, os.Interrupt, syscall.SIGTERM)
 
 	<-doneExit
-	//log.Println("stop service bot")
+
+	clipboardWatcher.StopPolling()
 	log.Info("Stop service bot")
 }
