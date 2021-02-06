@@ -25,8 +25,13 @@ func sendClipboardToChat(data string, arg interface{}) {
 	var info *infoArg = arg.(*infoArg)
 
 	log.Debug("call sendClipboardToChat")
-	log.Debug("data :", data)
 
+	if info.service.TouchedFile {
+		info.service.TouchedFile = false
+		return
+	}
+
+	log.Debug("data :", data)
 	info.service.SendMsg(info.chatID, data, false, 0)
 }
 
