@@ -21,10 +21,12 @@ type chatInfo struct {
 }
 
 type ServiceBot struct {
-	bot       *tgbotapi.BotAPI
-	updates   tgbotapi.UpdatesChannel
-	chats     map[int64]*chatInfo
-	adminUser string
+	bot          *tgbotapi.BotAPI
+	updates      tgbotapi.UpdatesChannel
+	chats        map[int64]*chatInfo
+	adminUser    string
+	saveFilePath string
+	TouchedFile  bool
 }
 
 func NewServiceBot() *ServiceBot {
@@ -104,6 +106,25 @@ func (s *ServiceBot) GetAdminUser() string {
 	return s.adminUser
 }
 
+func (s *ServiceBot) setMsgSaveFile() {
+	watchFile, err := utils.GetConfigData("watch_file")
+	if err != nil {
+		log.Panicln("ERR :", err)
+	}
+
+	s.saveFilePath = watchFile
+	log.Info("Save file path : ", s.saveFilePath)
+}
+
+func (s *ServiceBot) saveMsg(msg string) {
+	err := ioutil.WriteFile(s.saveFilePath, []byte(msg), 0644)
+	if err != nil {
+		log.Error(err)
+	}
+
+	s.TouchedFile = true
+}
+
 func (s *ServiceBot) updateReceiver() {
 	for update := range s.updates {
 		if update.Message == nil { // ignore any non-Message Updates
@@ -117,6 +138,9 @@ func (s *ServiceBot) updateReceiver() {
 		}
 
 		log.Debugf("[%s] %s]", update.Message.From.UserName, update.Message.Text)
+
+		s.saveMsg(update.Message.Text)
+		s.SendMsg(update.Message.Chat.ID, "Text saved", true, 60)
 	}
 }
 
@@ -153,6 +177,7 @@ func (s *ServiceBot) Start() error {
 	log.Info("Start service bot")
 
 	s.setAdminUser()
+	s.setMsgSaveFile()
 
 	return nil
 }
