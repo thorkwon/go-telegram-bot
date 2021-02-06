@@ -23,6 +23,7 @@ type chatInfo struct {
 type ServiceBot struct {
 	bot          *tgbotapi.BotAPI
 	updates      tgbotapi.UpdatesChannel
+	configDir    string
 	chats        map[int64]*chatInfo
 	adminUser    string
 	saveFilePath string
@@ -55,14 +56,9 @@ func (s *ServiceBot) setChat(chat *tgbotapi.Chat) {
 	data, _ := json.Marshal(s.chats)
 	log.Debug(string(data))
 
-	configDir, err := utils.GetConfigDir()
+	err := ioutil.WriteFile(s.configDir+"/chat_list", data, 0644)
 	if err != nil {
 		log.Error(err)
-	} else {
-		err = ioutil.WriteFile(configDir+"/chat_list", data, 0644)
-		if err != nil {
-			log.Error(err)
-		}
 	}
 }
 
@@ -71,12 +67,7 @@ func (s *ServiceBot) GetChat() map[int64]*chatInfo {
 		return s.chats
 	}
 
-	configDir, err := utils.GetConfigDir()
-	if err != nil {
-		log.Error(err)
-	}
-
-	data, err := ioutil.ReadFile(configDir + "/chat_list")
+	data, err := ioutil.ReadFile(s.configDir + "/chat_list")
 	if err != nil {
 		log.Error(err)
 	}
@@ -150,6 +141,13 @@ func (s *ServiceBot) updateReceiver() {
 }
 
 func (s *ServiceBot) Start() error {
+	configDir, err := utils.GetConfigDir()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	s.configDir = configDir
+
 	tokenKey, err := s.getToken()
 	if err != nil {
 		log.Error(err)
