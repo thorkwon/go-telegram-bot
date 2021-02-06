@@ -56,16 +56,16 @@ func main() {
 
 	err := service.Start()
 	if err != nil {
-		log.Panicln(err)
+		log.Fatal(err)
 	}
 
 	chatID := getPrivateChatID(service)
 	if chatID == 0 {
-		log.Error("No such private chat")
-	} else {
-		info := &infoArg{service: service, chatID: chatID}
-		clipboardWatcher = watch.ClipboardPolling(sendClipboardToChat, info)
+		log.Fatal("No such private chat")
 	}
+
+	info := &infoArg{service: service, chatID: chatID}
+	clipboardWatcher = watch.ClipboardPolling(sendClipboardToChat, info)
 
 	// Exit
 	doneExit := make(chan os.Signal)
@@ -73,6 +73,9 @@ func main() {
 
 	<-doneExit
 
-	clipboardWatcher.StopPolling()
+	if clipboardWatcher != nil {
+		clipboardWatcher.StopPolling()
+	}
+
 	log.Info("Stop service bot")
 }
