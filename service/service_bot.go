@@ -39,7 +39,6 @@ func NewServiceBot() *ServiceBot {
 func (s *ServiceBot) getToken() (string, error) {
 	tokenKey, err := utils.GetConfigData("token_key")
 	if err != nil {
-		log.Error("ERR :", err)
 		return "", err
 	}
 
@@ -75,13 +74,11 @@ func (s *ServiceBot) GetChat() map[int64]*chatInfo {
 	configDir, err := utils.GetConfigDir()
 	if err != nil {
 		log.Error(err)
-		return nil
 	}
 
 	data, err := ioutil.ReadFile(configDir + "/chat_list")
 	if err != nil {
 		log.Error(err)
-		return nil
 	}
 
 	json.Unmarshal(data, &s.chats)
@@ -93,7 +90,6 @@ func (s *ServiceBot) GetChat() map[int64]*chatInfo {
 func (s *ServiceBot) setAdminUser() error {
 	adminUser, err := utils.GetConfigData("admin_user")
 	if err != nil {
-		log.Panicln("ERR :", err)
 		return err
 	}
 	s.adminUser = adminUser
@@ -106,23 +102,32 @@ func (s *ServiceBot) GetAdminUser() string {
 	return s.adminUser
 }
 
-func (s *ServiceBot) setMsgSaveFile() {
+func (s *ServiceBot) setMsgSaveFile() error {
 	watchFile, err := utils.GetConfigData("watch_file")
 	if err != nil {
-		log.Panicln("ERR :", err)
+		return err
 	}
 
 	s.saveFilePath = watchFile
 	log.Info("Save file path : ", s.saveFilePath)
+
+	return err
 }
 
-func (s *ServiceBot) saveMsg(msg string) {
+func (s *ServiceBot) saveMsgToFile(msg string) {
 	err := ioutil.WriteFile(s.saveFilePath, []byte(msg), 0644)
 	if err != nil {
 		log.Error(err)
 	}
 
 	s.TouchedFile = true
+}
+
+func (s *ServiceBot) SendMsg(chatID int64, msg string, delete bool, delay int) {
+	if delete {
+		// auto delete msg
+	}
+	s.bot.Send(tgbotapi.NewMessage(chatID, msg))
 }
 
 func (s *ServiceBot) updateReceiver() {
@@ -139,23 +144,16 @@ func (s *ServiceBot) updateReceiver() {
 
 		log.Debugf("[%s] %s]", update.Message.From.UserName, update.Message.Text)
 
-		s.saveMsg(update.Message.Text)
+		s.saveMsgToFile(update.Message.Text)
 		s.SendMsg(update.Message.Chat.ID, "Text saved", true, 60)
 	}
-}
-
-func (s *ServiceBot) SendMsg(chatID int64, msg string, delete bool, delay int) {
-	if delete {
-		// auto delete msg
-	}
-	s.bot.Send(tgbotapi.NewMessage(chatID, msg))
 }
 
 func (s *ServiceBot) Start() error {
 	tokenKey, err := s.getToken()
 	if err != nil {
-		log.Error("get token err")
-		return nil
+		log.Error(err)
+		return err
 	}
 	log.Debug("Token Key :", tokenKey)
 
@@ -171,13 +169,26 @@ func (s *ServiceBot) Start() error {
 	updateConfig.Timeout = 60
 
 	updates, err := bot.GetUpdatesChan(updateConfig)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
 	s.updates = updates
 
 	go s.updateReceiver()
 	log.Info("Start service bot")
 
-	s.setAdminUser()
-	s.setMsgSaveFile()
+	err = s.setAdminUser()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	err = s.setMsgSaveFile()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
 
 	return nil
 }
