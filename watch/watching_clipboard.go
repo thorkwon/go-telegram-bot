@@ -14,14 +14,15 @@ func init() {
 }
 
 type ClipboardWatcher struct {
-	donePolling chan bool
-	watcher     struct{}
-	cb          func(string, interface{})
-	arg         interface{}
+	donePolling   chan bool
+	isDonePolling chan bool
+	watcher       struct{}
+	cb            func(string, interface{})
+	arg           interface{}
 }
 
 func ClipboardPolling(cb func(string, interface{}), arg interface{}) *ClipboardWatcher {
-	obj := &ClipboardWatcher{donePolling: make(chan bool)}
+	obj := &ClipboardWatcher{donePolling: make(chan bool), isDonePolling: make(chan bool)}
 
 	filePath, err := utils.GetConfigData("watch_file")
 	if err != nil {
@@ -38,7 +39,8 @@ func ClipboardPolling(cb func(string, interface{}), arg interface{}) *ClipboardW
 
 func (c *ClipboardWatcher) StopPolling() {
 	c.donePolling <- true
-	log.Info("Stop clipboard wathing service")
+
+	<-c.isDonePolling
 }
 
 func (c *ClipboardWatcher) setCbFunc(cb func(string, interface{}), arg interface{}) {
@@ -84,4 +86,7 @@ func (c *ClipboardWatcher) pollingProcess(pollingPath string) {
 	log.Info("Clipboard watching path : ", pollingPath)
 
 	<-c.donePolling
+
+	log.Info("Stop clipboard watching service")
+	c.isDonePolling <- true
 }
