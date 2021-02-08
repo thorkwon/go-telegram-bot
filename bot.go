@@ -77,5 +77,5 @@ func main() {
 		clipboardWatcher.StopPolling()
 	}
 
-	log.Info("Stop service bot")
+	service.Stop()
 }
