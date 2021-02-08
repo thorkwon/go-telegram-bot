@@ -221,3 +221,8 @@ func (s *ServiceBot) Start() error {
 
 	return nil
 }
+
+func (s *ServiceBot) Stop() {
+	s.workQueue.Stop()
+	log.Info("Stop service bot")
+}
