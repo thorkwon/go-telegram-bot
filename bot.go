@@ -61,11 +61,12 @@ func main() {
 
 	chatID := getPrivateChatID(service)
 	if chatID == 0 {
-		log.Fatal("No such private chat")
+		log.Warn("No such private chat")
+		log.Warn("Clipboard watching service has not started")
+	} else {
+		info := &infoArg{service: service, chatID: chatID}
+		clipboardWatcher = watch.ClipboardPolling(sendClipboardToChat, info)
 	}
-
-	info := &infoArg{service: service, chatID: chatID}
-	clipboardWatcher = watch.ClipboardPolling(sendClipboardToChat, info)
 
 	// Exit
 	doneExit := make(chan os.Signal)
