@@ -28,6 +28,7 @@ type WorkQueue struct {
 	haveTask   bool
 	cb         func(int64, int)
 	arg        interface{}
+	doneQueue  chan bool
 }
 
 func NewWorkQueue(cb func(int64, int)) *WorkQueue {
@@ -38,6 +39,7 @@ func NewWorkQueue(cb func(int64, int)) *WorkQueue {
 	obj.currentIdx = 0
 	obj.runFlag = false
 	obj.haveTask = false
+	obj.doneQueue = make(chan bool)
 
 	obj.setCbFunc(cb)
 
@@ -118,10 +120,14 @@ func (q *WorkQueue) start() {
 		log.Debugf("ccurrentIdx [%d] haveTask [%v] ========= totalCnt [%d]", q.currentIdx, q.haveTask, totalCnt)
 	}
 	log.Debug("Work Queue finished")
+	q.doneQueue <- true
 }
 
 func (q *WorkQueue) Stop() {
-	q.runFlag = false
+	if q.runFlag {
+		q.runFlag = false
+		<-q.doneQueue
+	}
 }
 
 /*
