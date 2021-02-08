@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/thorkwon/go-telegram-bot/service/queue"
 	"github.com/thorkwon/go-telegram-bot/utils"
 )
 
@@ -28,11 +29,13 @@ type ServiceBot struct {
 	adminUser    string
 	saveFilePath string
 	TouchedFile  bool
+	workQueue    *queue.WorkQueue
 }
 
 func NewServiceBot() *ServiceBot {
 	obj := &ServiceBot{}
 	obj.chats = make(map[int64]*chatInfo)
+	obj.workQueue = queue.NewWorkQueue(obj.deleteMsg)
 
 	return obj
 }
@@ -114,11 +117,36 @@ func (s *ServiceBot) saveMsgToFile(msg string) {
 	s.TouchedFile = true
 }
 
+func (s *ServiceBot) deleteMsg(chatID int64, msgID int) {
+	s.bot.DeleteMessage(tgbotapi.NewDeleteMessage(chatID, msgID))
+}
+
+func (s *ServiceBot) AutoDeleteMsg(chatID int64, msgID int, delay int) {
+	s.workQueue.AddTask(chatID, msgID, delay)
+}
+
 func (s *ServiceBot) SendMsg(chatID int64, msg string, delete bool, delay int) {
-	if delete {
-		// auto delete msg
+	ret, err := s.bot.Send(tgbotapi.NewMessage(chatID, msg))
+	if err == nil && delete {
+		s.AutoDeleteMsg(chatID, ret.MessageID, delay)
 	}
-	s.bot.Send(tgbotapi.NewMessage(chatID, msg))
+}
+
+func (s *ServiceBot) cmdHandler(update tgbotapi.Update) {
+	log.Debug("Call cmd handler")
+}
+
+func (s *ServiceBot) fileHandler(update tgbotapi.Update) {
+	log.Debug("Call file handler")
+}
+
+func (s *ServiceBot) textHandler(update tgbotapi.Update) {
+	log.Debug("Call text handler")
+
+	log.Debugf("[%s] %s]", update.Message.From.UserName, update.Message.Text)
+	s.saveMsgToFile(update.Message.Text)
+	s.SendMsg(update.Message.Chat.ID, "Text saved", true, 60)
+	s.AutoDeleteMsg(update.Message.Chat.ID, update.Message.MessageID, 60)
 }
 
 func (s *ServiceBot) updateReceiver() {
@@ -133,10 +161,13 @@ func (s *ServiceBot) updateReceiver() {
 			log.Infof("New chat id, save chat id [%d]", update.Message.Chat.ID)
 		}
 
-		log.Debugf("[%s] %s]", update.Message.From.UserName, update.Message.Text)
-
-		s.saveMsgToFile(update.Message.Text)
-		s.SendMsg(update.Message.Chat.ID, "Text saved", true, 60)
+		if update.Message.IsCommand() {
+			go s.cmdHandler(update)
+		} else if update.Message.Photo == nil && update.Message.Video == nil && update.Message.Audio == nil && update.Message.Document == nil {
+			go s.textHandler(update)
+		} else {
+			go s.fileHandler(update)
+		}
 	}
 }
 
