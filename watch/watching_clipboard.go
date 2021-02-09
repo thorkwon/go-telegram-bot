@@ -79,8 +79,7 @@ func (c *ClipboardWatcher) pollingProcess(pollingPath string) {
 		}
 	}()
 
-	err = watcher.Add(pollingPath)
-	if err != nil {
+	if err = watcher.Add(pollingPath); err != nil {
 		log.Panic(err)
 	}
 	log.Info("Clipboard watching path : ", pollingPath)
