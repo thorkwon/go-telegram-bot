@@ -54,8 +54,7 @@ func main() {
 	service := service.NewServiceBot()
 	var clipboardWatcher *watch.ClipboardWatcher
 
-	err := service.Start()
-	if err != nil {
+	if err := service.Start(); err != nil {
 		log.Fatal(err)
 	}
 
