@@ -2,7 +2,12 @@ package service
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
+	"net/http"
+	"os"
+	"strings"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/thorkwon/go-telegram-bot/service/queue"
@@ -28,6 +33,8 @@ type ServiceBot struct {
 	chats        map[int64]*chatInfo
 	adminUser    string
 	saveFilePath string
+	downloadDir  string
+	torrentDir   string
 	TouchedFile  bool
 	workQueue    *queue.WorkQueue
 }
@@ -96,6 +103,30 @@ func (s *ServiceBot) GetAdminUser() string {
 	return s.adminUser
 }
 
+func (s *ServiceBot) setDownloadDir() error {
+	dir, err := utils.GetConfigData("download_dir")
+	if err != nil {
+		return err
+	}
+
+	s.downloadDir = dir
+	log.Info("Download dir path : ", s.downloadDir)
+
+	return err
+}
+
+func (s *ServiceBot) setTorrentDir() error {
+	dir, err := utils.GetConfigData("torrent_dir")
+	if err != nil {
+		return err
+	}
+
+	s.torrentDir = dir
+	log.Info("Torrent seed dir path : ", s.torrentDir)
+
+	return err
+}
+
 func (s *ServiceBot) setMsgSaveFile() error {
 	watchFile, err := utils.GetConfigData("watch_file")
 	if err != nil {
@@ -136,14 +167,90 @@ func (s *ServiceBot) cmdHandler(update tgbotapi.Update) {
 	log.Debug("Call cmd handler")
 }
 
+func (s *ServiceBot) downloadFile(fileName string, url string) error {
+	if fileName == "" {
+		arr := strings.Split(url, "/")
+		arr = strings.Split(arr[len(arr)-1], ".")
+		times := time.Now().Format("060102_150405")
+
+		fileName = "file_" + times + "." + arr[len(arr)-1]
+	}
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Create the file
+	log.Debug("save file path : ", s.downloadDir+"/"+fileName)
+	out, err := os.Create(s.downloadDir + "/" + fileName)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
+
 func (s *ServiceBot) fileHandler(update tgbotapi.Update) {
 	log.Debug("Call file handler")
+
+	var fileID string
+	var fileName string
+
+	if update.Message.Photo != nil {
+		log.Debugf("Photo %#v", update.Message.Photo)
+
+		fileID = (*update.Message.Photo)[len(*update.Message.Photo)-1].FileID
+	}
+	if update.Message.Video != nil {
+		log.Debugf("Video %#v", update.Message.Video)
+
+		fileID = update.Message.Video.FileID
+	}
+	if update.Message.Audio != nil {
+		log.Debugf("Audio %#v", update.Message.Audio)
+
+		fileID = update.Message.Audio.FileID
+	}
+	if update.Message.Document != nil {
+		log.Debugf("Document %#v", update.Message.Document)
+
+		fileID = update.Message.Document.FileID
+		fileName = update.Message.Document.FileName
+	}
+
+	if fileID != "" {
+		fileURL, err := s.bot.GetFileDirectURL(fileID)
+		if err != nil {
+			log.Error(err)
+			goto ERR
+		}
+		log.Debug("url : ", fileURL)
+
+		err = s.downloadFile(fileName, fileURL)
+		if err != nil {
+			log.Error(err)
+			goto ERR
+		}
+	}
+
+	s.SendMsg(update.Message.Chat.ID, "Upload Success", true, 60)
+
+	return
+
+ERR:
+	s.SendMsg(update.Message.Chat.ID, "Upload Failed", true, 60)
 }
 
 func (s *ServiceBot) textHandler(update tgbotapi.Update) {
 	log.Debug("Call text handler")
 
-	log.Debugf("[%s] %s]", update.Message.From.UserName, update.Message.Text)
+	log.Debugf("msg [%s]", update.Message.Text)
 	s.saveMsgToFile(update.Message.Text)
 	s.SendMsg(update.Message.Chat.ID, "Text saved", true, 60)
 	s.AutoDeleteMsg(update.Message.Chat.ID, update.Message.MessageID, 60)
@@ -152,6 +259,11 @@ func (s *ServiceBot) textHandler(update tgbotapi.Update) {
 func (s *ServiceBot) updateReceiver() {
 	for update := range s.updates {
 		if update.Message == nil { // ignore any non-Message Updates
+			continue
+		}
+
+		if s.adminUser != update.Message.From.UserName {
+			log.Warn("Not admin user : ", update.Message.From.UserName)
 			continue
 		}
 
@@ -214,6 +326,18 @@ func (s *ServiceBot) Start() error {
 	}
 
 	err = s.setMsgSaveFile()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	err = s.setDownloadDir()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	err = s.setTorrentDir()
 	if err != nil {
 		log.Error(err)
 		return err
