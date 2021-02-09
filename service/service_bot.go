@@ -66,8 +66,7 @@ func (s *ServiceBot) setChat(chat *tgbotapi.Chat) {
 	data, _ := json.Marshal(s.chats)
 	log.Debug(string(data))
 
-	err := ioutil.WriteFile(s.configDir+"/chat_list", data, 0644)
-	if err != nil {
+	if err := ioutil.WriteFile(s.configDir+"/chat_list", data, 0644); err != nil {
 		log.Error(err)
 	}
 }
@@ -140,8 +139,7 @@ func (s *ServiceBot) setMsgSaveFile() error {
 }
 
 func (s *ServiceBot) saveMsgToFile(msg string) {
-	err := ioutil.WriteFile(s.saveFilePath, []byte(msg), 0644)
-	if err != nil {
+	if err := ioutil.WriteFile(s.saveFilePath, []byte(msg), 0644); err != nil {
 		log.Error(err)
 	}
 
@@ -232,8 +230,7 @@ func (s *ServiceBot) fileHandler(update tgbotapi.Update) {
 		}
 		log.Debug("url : ", fileURL)
 
-		err = s.downloadFile(fileName, fileURL)
-		if err != nil {
+		if err := s.downloadFile(fileName, fileURL); err != nil {
 			log.Error(err)
 			goto ERR
 		}
@@ -319,26 +316,22 @@ func (s *ServiceBot) Start() error {
 	go s.updateReceiver()
 	log.Info("Start service bot")
 
-	err = s.setAdminUser()
-	if err != nil {
+	if err = s.setAdminUser(); err != nil {
 		log.Error(err)
 		return err
 	}
 
-	err = s.setMsgSaveFile()
-	if err != nil {
+	if err = s.setMsgSaveFile(); err != nil {
 		log.Error(err)
 		return err
 	}
 
-	err = s.setDownloadDir()
-	if err != nil {
+	if err = s.setDownloadDir(); err != nil {
 		log.Error(err)
 		return err
 	}
 
-	err = s.setTorrentDir()
-	if err != nil {
+	if err = s.setTorrentDir(); err != nil {
 		log.Error(err)
 		return err
 	}
