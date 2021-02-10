@@ -3,6 +3,7 @@ package main // import "github.com/thorkwon/go-telegram-bot"
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 
@@ -44,6 +45,16 @@ func deleteTorrentSeed(seedName string, arg interface{}) {
 
 	msg := fmt.Sprintf("Torrent download complete!!!\n[%s]", seedName)
 	info.service.SendMsg(info.chatID, msg, true, 3600)
+
+	cmd := exec.Command("bash", "start.sh")
+	cmd.Dir = "../qbittorrent-macro"
+
+	output, err := cmd.Output()
+	if err != nil {
+		log.Error(err)
+	} else {
+		log.Debug(string(output))
+	}
 }
 
 func getPrivateChatID(service *service.ServiceBot) int64 {
