@@ -1,6 +1,7 @@
 package main // import "github.com/thorkwon/go-telegram-bot"
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -35,6 +36,16 @@ func sendClipboardToChat(data string, arg interface{}) {
 	info.service.SendMsg(info.chatID, data, false, 0)
 }
 
+func deleteTorrentSeed(seedName string, arg interface{}) {
+	var info *infoArg = arg.(*infoArg)
+
+	log.Debug("call deleteTorrentSeed")
+	log.Debug("seedname :", seedName)
+
+	msg := fmt.Sprintf("Torrent download complete!!!\n[%s]", seedName)
+	info.service.SendMsg(info.chatID, msg, true, 3600)
+}
+
 func getPrivateChatID(service *service.ServiceBot) int64 {
 	chats := service.GetChat()
 	adminUser := service.GetAdminUser()
@@ -53,6 +64,7 @@ func getPrivateChatID(service *service.ServiceBot) int64 {
 func main() {
 	service := service.NewServiceBot()
 	var clipboardWatcher *watch.ClipboardWatcher
+	var downloadWatcher *watch.DownloadWatcher
 
 	if err := service.Start(); err != nil {
 		log.Fatal(err)
@@ -62,9 +74,11 @@ func main() {
 	if chatID == 0 {
 		log.Warn("No such private chat")
 		log.Warn("Clipboard watching service has not started")
+		log.Warn("Download watching service has not started")
 	} else {
 		info := &infoArg{service: service, chatID: chatID}
 		clipboardWatcher = watch.ClipboardPolling(sendClipboardToChat, info)
+		downloadWatcher = watch.DownloadPolling(deleteTorrentSeed, info)
 	}
 
 	// Exit
@@ -75,6 +89,9 @@ func main() {
 
 	if clipboardWatcher != nil {
 		clipboardWatcher.StopPolling()
+	}
+	if downloadWatcher != nil {
+		downloadWatcher.StopPolling()
 	}
 
 	service.Stop()
