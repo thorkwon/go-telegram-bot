@@ -21,7 +21,7 @@ func init() {
 }
 
 type chatInfo struct {
-	Id       int64  `json:"id"`
+	ID       int64  `json:"id"`
 	ChatType string `json:"type"`
 	UserName string `json:"name"`
 }
@@ -57,7 +57,7 @@ func (s *ServiceBot) getToken() (string, error) {
 }
 
 func (s *ServiceBot) setChat(chat *tgbotapi.Chat) {
-	s.chats[chat.ID] = &chatInfo{Id: chat.ID, ChatType: chat.Type, UserName: chat.UserName}
+	s.chats[chat.ID] = &chatInfo{ID: chat.ID, ChatType: chat.Type, UserName: chat.UserName}
 
 	log.Debug("set chat id:", s.chats[chat.ID])
 	log.Debug("set chat :", s.chats)
@@ -165,15 +165,7 @@ func (s *ServiceBot) cmdHandler(update tgbotapi.Update) {
 	log.Debug("Call cmd handler")
 }
 
-func (s *ServiceBot) downloadFile(fileName string, url string) error {
-	if fileName == "" {
-		arr := strings.Split(url, "/")
-		arr = strings.Split(arr[len(arr)-1], ".")
-		times := time.Now().Format("060102_150405")
-
-		fileName = "file_" + times + "." + arr[len(arr)-1]
-	}
-
+func (s *ServiceBot) downloadFile(fileFullPath string, url string) error {
 	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
@@ -182,8 +174,8 @@ func (s *ServiceBot) downloadFile(fileName string, url string) error {
 	defer resp.Body.Close()
 
 	// Create the file
-	log.Debug("save file path : ", s.downloadDir+"/"+fileName)
-	out, err := os.Create(s.downloadDir + "/" + fileName)
+	log.Debug("save file path : ", fileFullPath)
+	out, err := os.Create(fileFullPath)
 	if err != nil {
 		return err
 	}
@@ -200,26 +192,23 @@ func (s *ServiceBot) fileHandler(update tgbotapi.Update) {
 	var fileID string
 	var fileName string
 
-	if update.Message.Photo != nil {
-		log.Debugf("Photo %#v", update.Message.Photo)
-
-		fileID = (*update.Message.Photo)[len(*update.Message.Photo)-1].FileID
-	}
-	if update.Message.Video != nil {
-		log.Debugf("Video %#v", update.Message.Video)
-
-		fileID = update.Message.Video.FileID
-	}
-	if update.Message.Audio != nil {
-		log.Debugf("Audio %#v", update.Message.Audio)
-
-		fileID = update.Message.Audio.FileID
-	}
 	if update.Message.Document != nil {
 		log.Debugf("Document %#v", update.Message.Document)
 
 		fileID = update.Message.Document.FileID
 		fileName = update.Message.Document.FileName
+	} else if update.Message.Photo != nil {
+		log.Debugf("Photo %#v", update.Message.Photo)
+
+		fileID = (*update.Message.Photo)[len(*update.Message.Photo)-1].FileID
+	} else if update.Message.Video != nil {
+		log.Debugf("Video %#v", update.Message.Video)
+
+		fileID = update.Message.Video.FileID
+	} else if update.Message.Audio != nil {
+		log.Debugf("Audio %#v", update.Message.Audio)
+
+		fileID = update.Message.Audio.FileID
 	}
 
 	if fileID != "" {
@@ -230,7 +219,24 @@ func (s *ServiceBot) fileHandler(update tgbotapi.Update) {
 		}
 		log.Debug("url : ", fileURL)
 
-		if err := s.downloadFile(fileName, fileURL); err != nil {
+		var fileFullPath string
+		if fileName != "" {
+			arr := strings.Split(fileName, ".")
+			if arr[len(arr)-1] == "torrent" {
+				fileFullPath = s.torrentDir + "/" + fileName
+			} else {
+				fileFullPath = s.downloadDir + "/" + fileName
+			}
+		} else if fileName == "" {
+			arr := strings.Split(fileURL, "/")
+			arr = strings.Split(arr[len(arr)-1], ".")
+			times := time.Now().Format("060102_150405")
+
+			fileName = "file_" + times + "." + arr[len(arr)-1]
+			fileFullPath = s.downloadDir + "/" + fileName
+		}
+
+		if err := s.downloadFile(fileFullPath, fileURL); err != nil {
 			log.Error(err)
 			goto ERR
 		}
