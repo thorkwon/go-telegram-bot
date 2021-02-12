@@ -139,11 +139,12 @@ func (s *ServiceBot) setMsgSaveFile() error {
 }
 
 func (s *ServiceBot) saveMsgToFile(msg string) {
+	s.TouchedFile = true
+
 	if err := ioutil.WriteFile(s.saveFilePath, []byte(msg), 0644); err != nil {
+		s.TouchedFile = false
 		log.Error(err)
 	}
-
-	s.TouchedFile = true
 }
 
 func (s *ServiceBot) deleteMsg(chatID int64, msgID int) {
