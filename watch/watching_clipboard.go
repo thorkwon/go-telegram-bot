@@ -49,6 +49,8 @@ func (c *ClipboardWatcher) setCbFunc(cb func(string, interface{}), arg interface
 }
 
 func (c *ClipboardWatcher) pollingProcess(pollingPath string) {
+	var oldData string
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Panic(err)
@@ -66,9 +68,10 @@ func (c *ClipboardWatcher) pollingProcess(pollingPath string) {
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					log.Debug("Watcher event : ", event)
 					data, err := ioutil.ReadFile(event.Name)
-					if err == nil {
+					if err == nil && oldData != string(data) {
 						c.cb(string(data)[:len(data)-1], c.arg)
 					}
+					oldData = string(data)
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
