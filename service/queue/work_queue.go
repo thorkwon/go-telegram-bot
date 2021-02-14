@@ -10,7 +10,7 @@ import (
 var log = utils.GetLogger("queue")
 
 func init() {
-	utils.EnableDebugLog("queue")
+	// utils.EnableDebugLog("queue")
 }
 
 type Task struct {
@@ -117,7 +117,7 @@ func (q *WorkQueue) start() {
 			}
 		}
 
-		log.Debugf("ccurrentIdx [%d] haveTask [%v] ========= totalCnt [%d]", q.currentIdx, q.haveTask, totalCnt)
+		// log.Debugf("ccurrentIdx [%d] haveTask [%v] ========= totalCnt [%d]", q.currentIdx, q.haveTask, totalCnt)
 	}
 	log.Debug("Work Queue finished")
 	q.doneQueue <- true
