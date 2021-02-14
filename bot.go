@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/thorkwon/go-telegram-bot/crawling"
 	"github.com/thorkwon/go-telegram-bot/service"
 	"github.com/thorkwon/go-telegram-bot/utils"
 	"github.com/thorkwon/go-telegram-bot/watch"
@@ -57,6 +58,14 @@ func deleteTorrentSeed(seedName string, arg interface{}) {
 	}
 }
 
+func sendCOVID19Status(data string, arg interface{}) {
+	var info *infoArg = arg.(*infoArg)
+
+	log.Debug("call sendCOVID19Status")
+
+	info.service.SendMsg(info.chatID, data, false, 0)
+}
+
 func getPrivateChatID(service *service.ServiceBot) int64 {
 	chats := service.GetChat()
 	adminUser := service.GetAdminUser()
@@ -76,6 +85,7 @@ func main() {
 	service := service.NewServiceBot()
 	var clipboardWatcher *watch.ClipboardWatcher
 	var downloadWatcher *watch.DownloadWatcher
+	var covidCrawler *crawling.COVID19Crawler
 
 	if err := service.Start(); err != nil {
 		log.Fatal(err)
@@ -86,10 +96,12 @@ func main() {
 		log.Warn("No such private chat")
 		log.Warn("Clipboard watching service has not started")
 		log.Warn("Download watching service has not started")
+		log.Warn("COVID-19 notice service has not started")
 	} else {
 		info := &infoArg{service: service, chatID: chatID}
 		clipboardWatcher = watch.ClipboardPolling(sendClipboardToChat, info)
 		downloadWatcher = watch.DownloadPolling(deleteTorrentSeed, info)
+		covidCrawler = crawling.NoticeCOVID19Status(sendCOVID19Status, info)
 	}
 
 	// Exit
@@ -103,6 +115,9 @@ func main() {
 	}
 	if downloadWatcher != nil {
 		downloadWatcher.StopPolling()
+	}
+	if covidCrawler != nil {
+		covidCrawler.Stop()
 	}
 
 	service.Stop()
