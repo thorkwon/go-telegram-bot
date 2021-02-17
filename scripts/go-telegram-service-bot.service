@@ -1,0 +1,13 @@
+[Unit]
+Description=Go Telegram bot Service
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=<user name>
+WorkingDirectory=<fullpath:go-telegram-bot>
+ExecStart=<fullpath:go-telegram-bot/bot>
+
+[Install]
+WantedBy=multi-user.target
