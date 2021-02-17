@@ -66,6 +66,14 @@ func sendCOVID19Status(data string, arg interface{}) {
 	info.service.SendMsg(info.chatID, data, false, 0)
 }
 
+func sendCoinPremium(data string, arg interface{}) {
+	var info *infoArg = arg.(*infoArg)
+
+	log.Debug("call sendCoinPremium")
+
+	info.service.SendMsg(info.chatID, data, false, 0)
+}
+
 func getPrivateChatID(service *service.ServiceBot) int64 {
 	chats := service.GetChat()
 	adminUser := service.GetAdminUser()
@@ -86,6 +94,7 @@ func main() {
 	var clipboardWatcher *watch.ClipboardWatcher
 	var downloadWatcher *watch.DownloadWatcher
 	var covidCrawler *crawling.COVID19Crawler
+	var coinCrawler *crawling.CoinCrawler
 
 	if err := service.Start(); err != nil {
 		log.Fatal(err)
@@ -97,11 +106,13 @@ func main() {
 		log.Warn("Clipboard watching service has not started")
 		log.Warn("Download watching service has not started")
 		log.Warn("COVID-19 notice service has not started")
+		log.Warn("Coin premium notice service has not started")
 	} else {
 		info := &infoArg{service: service, chatID: chatID}
 		clipboardWatcher = watch.ClipboardPolling(sendClipboardToChat, info)
 		downloadWatcher = watch.DownloadPolling(deleteTorrentSeed, info)
 		covidCrawler = crawling.NoticeCOVID19Status(sendCOVID19Status, info)
+		coinCrawler = crawling.NoticeCoinPremium(sendCoinPremium, info)
 	}
 
 	// Exit
@@ -118,6 +129,9 @@ func main() {
 	}
 	if covidCrawler != nil {
 		covidCrawler.Stop()
+	}
+	if coinCrawler != nil {
+		coinCrawler.Stop()
 	}
 
 	service.Stop()
