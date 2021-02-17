@@ -244,6 +244,7 @@ func (s *ServiceBot) fileHandler(update tgbotapi.Update) {
 	}
 
 	s.SendMsg(update.Message.Chat.ID, "Upload Success", true, 60)
+	s.AutoDeleteMsg(update.Message.Chat.ID, update.Message.MessageID, 60)
 
 	return
 
