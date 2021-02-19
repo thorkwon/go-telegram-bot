@@ -7,10 +7,10 @@ import (
 	"github.com/thorkwon/go-telegram-bot/utils"
 )
 
-var log = utils.GetLogger("watch")
+var log = utils.GetLogger(utils.GetPackageName())
 
 func init() {
-	// utils.EnableDebugLog("watch")
+	// utils.EnableDebugLog(utils.GetPackageName())
 }
 
 type ClipboardWatcher struct {
