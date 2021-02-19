@@ -68,7 +68,7 @@ func (c *ClipboardWatcher) pollingProcess(pollingPath string) {
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					log.Debug("Watcher event : ", event)
 					data, err := ioutil.ReadFile(event.Name)
-					if err == nil && oldData != string(data) {
+					if err == nil && len(data) != 0 && oldData != string(data) {
 						c.cb(string(data)[:len(data)-1], c.arg)
 					}
 					oldData = string(data)
