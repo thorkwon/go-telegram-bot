@@ -15,10 +15,10 @@ import (
 	"github.com/thorkwon/go-telegram-bot/utils"
 )
 
-var log = utils.GetLogger("service")
+var log = utils.GetLogger(utils.GetPackageName())
 
 func init() {
-	// utils.EnableDebugLog("service")
+	// utils.EnableDebugLog(utils.GetPackageName())
 }
 
 type chatInfo struct {
