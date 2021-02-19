@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	// utils.EnableDebugLog("watch")
+	// utils.EnableDebugLog(utils.GetPackageName())
 }
 
 type DownloadWatcher struct {
