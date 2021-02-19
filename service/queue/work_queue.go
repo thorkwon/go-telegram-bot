@@ -7,10 +7,10 @@ import (
 	"github.com/thorkwon/go-telegram-bot/utils"
 )
 
-var log = utils.GetLogger("queue")
+var log = utils.GetLogger(utils.GetPackageName())
 
 func init() {
-	// utils.EnableDebugLog("queue")
+	// utils.EnableDebugLog(utils.GetPackageName())
 }
 
 type Task struct {
