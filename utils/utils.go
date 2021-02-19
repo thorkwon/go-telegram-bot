@@ -101,3 +101,41 @@ func EnableDebugLog(key string) {
 		logger.SetLevel(log.DebugLevel)
 	}
 }
+
+func DisableDebugLog(key string) {
+	logger, isKey := loggers[key]
+	if isKey {
+		logger.SetLevel(log.InfoLevel)
+	}
+}
+
+func GetDebugStatus() string {
+	var status string
+
+	for key := range loggers {
+		logger, _ := loggers[key]
+		status = status + fmt.Sprintf("%-8s%s\n", logger.GetLevel().String(), key)
+	}
+
+	return status
+}
+
+func GetPackageName() string {
+	pc, _, _, _ := runtime.Caller(1)
+	parts := strings.Split(runtime.FuncForPC(pc).Name(), ".")
+	pl := len(parts)
+	pkage := ""
+	funcName := parts[pl-1]
+
+	if parts[pl-2][0] == '(' {
+		funcName = parts[pl-2] + "." + funcName
+		pkage = strings.Join(parts[0:pl-2], ".")
+	} else {
+		pkage = strings.Join(parts[0:pl-1], ".")
+	}
+
+	arr := strings.Split(pkage, "/")
+	pkage = strings.Split(arr[len(arr)-1], ".")[0]
+
+	return pkage
+}
