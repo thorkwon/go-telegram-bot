@@ -11,10 +11,10 @@ import (
 	"github.com/thorkwon/go-telegram-bot/utils"
 )
 
-var log = utils.GetLogger("crawling")
+var log = utils.GetLogger(utils.GetPackageName())
 
 func init() {
-	// utils.EnableDebugLog("crawling")
+	// utils.EnableDebugLog(utils.GetPackageName())
 }
 
 type COVID19Crawler struct {
