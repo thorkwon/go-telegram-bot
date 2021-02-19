@@ -13,10 +13,10 @@ import (
 	"github.com/thorkwon/go-telegram-bot/watch"
 )
 
-var log = utils.GetLogger("main")
+var log = utils.GetLogger(utils.GetPackageName())
 
 func init() {
-	// utils.EnableDebugLog("main")
+	// utils.EnableDebugLog(utils.GetPackageName())
 }
 
 type infoArg struct {
