@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -37,6 +38,7 @@ type ServiceBot struct {
 	torrentDir   string
 	TouchedFile  bool
 	workQueue    *queue.WorkQueue
+	flagCmd      int
 }
 
 func NewServiceBot() *ServiceBot {
@@ -164,6 +166,21 @@ func (s *ServiceBot) SendMsg(chatID int64, msg string, delete bool, delay int) {
 
 func (s *ServiceBot) cmdHandler(update tgbotapi.Update) {
 	log.Debug("Call cmd handler")
+
+	cmd := update.Message.Text
+	log.Debugf("cmd msg [%s]", cmd)
+
+	switch cmd {
+	case "/cancel":
+		s.flagCmd = 0
+	case "/debug":
+		s.flagCmd = 1
+		msg := fmt.Sprintf("[ on/off debug mode ]\nTell to me command:\ne.g.\non main (OR off main)")
+		s.SendMsg(update.Message.Chat.ID, msg, true, 60)
+		s.SendMsg(update.Message.Chat.ID, utils.GetDebugStatus(), true, 60)
+	}
+
+	s.AutoDeleteMsg(update.Message.Chat.ID, update.Message.MessageID, 60)
 }
 
 func (s *ServiceBot) downloadFile(fileFullPath string, url string) error {
@@ -255,9 +272,27 @@ ERR:
 func (s *ServiceBot) textHandler(update tgbotapi.Update) {
 	log.Debug("Call text handler")
 
-	log.Debugf("msg [%s]", update.Message.Text)
-	s.saveMsgToFile(update.Message.Text)
-	s.SendMsg(update.Message.Chat.ID, "Text saved", true, 60)
+	msg := update.Message.Text
+	log.Debugf("msg [%s]", msg)
+
+	switch s.flagCmd {
+	case 0: // Normal mode
+		s.saveMsgToFile(msg)
+		s.SendMsg(update.Message.Chat.ID, "Text saved", true, 60)
+	case 1: // Debug mode
+		arr := strings.Split(msg, " ")
+		if len(arr) == 2 {
+			if arr[0] == "on" {
+				utils.EnableDebugLog(arr[1])
+			} else {
+				utils.DisableDebugLog(arr[1])
+			}
+			s.SendMsg(update.Message.Chat.ID, utils.GetDebugStatus(), true, 60)
+		}
+
+		s.flagCmd = 0
+	}
+
 	s.AutoDeleteMsg(update.Message.Chat.ID, update.Message.MessageID, 60)
 }
 
