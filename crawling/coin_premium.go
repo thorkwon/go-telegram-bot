@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	// utils.EnableDebugLog("crawling")
+	// utils.EnableDebugLog(utils.GetPackageName())
 }
 
 type CoinCrawler struct {
