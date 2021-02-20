@@ -288,8 +288,11 @@ func (s *ServiceBot) textHandler(update tgbotapi.Update) {
 				utils.DisableDebugLog(arr[1])
 			}
 			s.SendMsg(update.Message.Chat.ID, utils.GetDebugStatus(), true, 60)
+		} else {
+			s.SendMsg(update.Message.Chat.ID, "Invalid command", true, 60)
 		}
 
+		s.SendMsg(update.Message.Chat.ID, "Stop command mode!", true, 60)
 		s.flagCmd = 0
 	}
 
