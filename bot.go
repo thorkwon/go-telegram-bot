@@ -3,11 +3,11 @@ package main // import "github.com/thorkwon/go-telegram-bot"
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
 	"syscall"
 
 	"github.com/thorkwon/go-telegram-bot/crawling"
+	"github.com/thorkwon/go-telegram-bot/qbit"
 	"github.com/thorkwon/go-telegram-bot/service"
 	"github.com/thorkwon/go-telegram-bot/utils"
 	"github.com/thorkwon/go-telegram-bot/watch"
@@ -47,14 +47,8 @@ func deleteTorrentSeed(seedName string, arg interface{}) {
 	msg := fmt.Sprintf("Torrent download complete!!!\n[%s]", seedName)
 	info.service.SendMsg(info.chatID, msg, true, 3600)
 
-	cmd := exec.Command("bash", "start.sh")
-	cmd.Dir = "../qbittorrent-macro"
-
-	output, err := cmd.Output()
-	if err != nil {
+	if err := qbit.DeleteTorrentSeed(); err != nil {
 		log.Error(err)
-	} else {
-		log.Debug(string(output))
 	}
 }
 
