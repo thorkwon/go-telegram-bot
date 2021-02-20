@@ -46,6 +46,8 @@ func (c *COVID19Crawler) crawlingProcess() {
 
 	log.Info("COVID-19 status notification service start")
 	for !c.done {
+		time.Sleep(time.Second)
+
 		now := time.Now()
 		if now.Hour() >= 9 && now.Hour() < 18 {
 			flagCheckTime = true
@@ -81,8 +83,6 @@ func (c *COVID19Crawler) crawlingProcess() {
 				oldMsg = msg
 			}
 		}
-
-		time.Sleep(time.Second)
 	}
 	c.isDone <- true
 }
