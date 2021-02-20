@@ -27,10 +27,6 @@ func NoticeCoinPremium(cb func(string, interface{}), arg interface{}) *CoinCrawl
 	obj := &CoinCrawler{isDone: make(chan bool)}
 	obj.setCbFunc(cb, arg)
 
-	if err := obj.startWebDriver(); err != nil {
-		return nil
-	}
-
 	go obj.crawlingProcess()
 
 	return obj
@@ -76,44 +72,30 @@ func (c *CoinCrawler) crawlingProcess() {
 func (c *CoinCrawler) Stop() {
 	c.done = true
 	<-c.isDone
-	c.stopWebDriver()
 	log.Info("Stop Coin premium crawling service")
-}
-
-func (c *CoinCrawler) startWebDriver() error {
-	log.Debug("Call startWebDriver")
-
-	c.driver = agouti.ChromeDriver(
-		agouti.ChromeOptions("args", []string{"--headless", "--disable-gpu", "--no-sandbox"}),
-	)
-
-	if err := c.driver.Start(); err != nil {
-		log.Error(err)
-		return err
-	}
-
-	return nil
-}
-
-func (c *CoinCrawler) stopWebDriver() {
-	log.Debug("Call stopWebDriver")
-
-	if err := c.driver.Stop(); err != nil {
-		log.Error(err)
-	}
 }
 
 func (c *CoinCrawler) getPage() error {
 	log.Debug("Call getPage")
 
+	c.driver = agouti.ChromeDriver(
+		agouti.ChromeOptions("args", []string{"--headless", "--disable-gpu", "--no-sandbox"}),
+	)
+	if err := c.driver.Start(); err != nil {
+		log.Error(err)
+		return err
+	}
+
 	page, err := c.driver.NewPage()
 	if err != nil {
 		log.Error(err)
+		c.driver.Stop()
 		return err
 	}
 
 	if err := page.Navigate("https://wisebody.co.kr"); err != nil {
 		log.Error(err)
+		c.driver.Stop()
 		return err
 	}
 
@@ -125,7 +107,12 @@ func (c *CoinCrawler) getPage() error {
 func (c *CoinCrawler) putPage() {
 	log.Debug("Call putPage")
 
-	c.page.CloseWindow()
+	if err := c.page.CloseWindow(); err != nil {
+		log.Error(err)
+	}
+	if err := c.driver.Stop(); err != nil {
+		log.Error(err)
+	}
 }
 
 func (c *CoinCrawler) getCoinPremium() string {
