@@ -74,10 +74,7 @@ func (q *QbitMacro) deleteTorrentSeed() error {
 	if err = q.page.All("#login").At(0).Click(); err != nil {
 		return err
 	}
-	// Todo. Finding the wait function waiting for the page to load
-	//       But the screenshot confirming that it was loaded
-	//       after "page.All(".torrentsTableContextMenuTarget")"
-	//       time.Sleep(time.Millisecond * 500)
+	q.page.Session().SetImplicitWait(500)
 
 	if err = q.page.All("#completed_filter").At(0).Click(); err != nil {
 		return err
