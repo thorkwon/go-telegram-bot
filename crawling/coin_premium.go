@@ -78,9 +78,11 @@ func (c *CoinCrawler) Stop() {
 func (c *CoinCrawler) getPage() error {
 	log.Debug("Call getPage")
 
-	c.driver = agouti.ChromeDriver(
-		agouti.ChromeOptions("args", []string{"--headless", "--disable-gpu", "--no-sandbox"}),
-	)
+	if c.driver == nil {
+		c.driver = agouti.ChromeDriver(
+			agouti.ChromeOptions("args", []string{"--headless", "--disable-gpu", "--no-sandbox"}),
+		)
+	}
 	if err := c.driver.Start(); err != nil {
 		log.Error(err)
 		return err
