@@ -40,20 +40,28 @@ func (c *CoinCrawler) setCbFunc(cb func(string, interface{}), arg interface{}) {
 func (c *CoinCrawler) crawlingProcess() {
 	var flagSentMsg bool
 	var cycle int
+	var checkCnt int
 
 	log.Info("Coin premium notification service start")
 	for !c.done {
 		if !flagSentMsg && cycle == 0 {
 			err := c.getPage()
-			if err == nil && c.checkCoinPremium() {
-				msg := c.getCoinPremium()
-
-				// send msg to chat
-				log.Debug("send msg : ", msg)
-				c.cb(msg, c.arg)
-				flagSentMsg = true
-			}
 			if err == nil {
+				if c.checkCoinPremium() {
+					log.Debug("Occurs premium")
+
+					// Keep premium for 5 min
+					checkCnt++
+					if checkCnt == 5 {
+						msg := c.getCoinPremium()
+						log.Debug("send msg : ", msg)
+						c.cb(msg, c.arg)
+						flagSentMsg = true
+					}
+				} else {
+					checkCnt = 0
+				}
+
 				c.putPage()
 			}
 		}
