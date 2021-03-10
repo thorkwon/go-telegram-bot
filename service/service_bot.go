@@ -159,7 +159,12 @@ func (s *ServiceBot) AutoDeleteMsg(chatID int64, msgID int, delay int) {
 
 func (s *ServiceBot) SendMsg(chatID int64, msg string, delete bool, delay int) {
 	ret, err := s.bot.Send(tgbotapi.NewMessage(chatID, msg))
-	if err == nil && delete {
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	if delete {
 		s.AutoDeleteMsg(chatID, ret.MessageID, delay)
 	}
 }
