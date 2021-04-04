@@ -131,15 +131,15 @@ func (c *CoinCrawler) getCoinPremium() string {
 	data := c.page.All("table.type2 > tbody > tr")
 	count, _ := data.Count()
 
-	var binance int
-	var upbit int
+	var binance string
+	var upbit string
 	var premium float64
 
 	for i := 0; i < count; i++ {
 		str, _ := data.At(i).Text()
 		if strings.Contains(str, "XLM") {
-			binance, _ = strconv.Atoi(strings.Split(strings.Split(str, " ")[2], "\n")[1])
-			upbit, _ = strconv.Atoi(strings.Split(strings.Split(str, " ")[3], "\n")[0])
+			binance = strings.Split(strings.Split(str, " ")[2], "\n")[1]
+			upbit = strings.Split(strings.Split(str, " ")[3], "\n")[0]
 
 			tmp := strings.Split(strings.Split(str, " ")[3], "\n")[1]
 			tmp = strings.Split(tmp, "%")[0]
@@ -152,7 +152,7 @@ func (c *CoinCrawler) getCoinPremium() string {
 		}
 	}
 
-	msg := fmt.Sprintf("Binance: %d, UPbit: %d (%.2f%%)", binance, upbit, premium)
+	msg := fmt.Sprintf("Binance: %s, UPbit: %s (%.2f%%)", binance, upbit, premium)
 
 	return msg
 }
@@ -163,15 +163,15 @@ func (c *CoinCrawler) checkCoinPremium() bool {
 	data := c.page.All("table.type2 > tbody > tr")
 	count, _ := data.Count()
 
-	var binance int
-	var upbit int
+	var binance string
+	var upbit string
 	var premium float64
 
 	for i := 0; i < count; i++ {
 		str, _ := data.At(i).Text()
 		if strings.Contains(str, "XLM") {
-			binance, _ = strconv.Atoi(strings.Split(strings.Split(str, " ")[2], "\n")[1])
-			upbit, _ = strconv.Atoi(strings.Split(strings.Split(str, " ")[3], "\n")[0])
+			binance = strings.Split(strings.Split(str, " ")[2], "\n")[1]
+			upbit = strings.Split(strings.Split(str, " ")[3], "\n")[0]
 
 			tmp := strings.Split(strings.Split(str, " ")[3], "\n")[1]
 			tmp = strings.Split(tmp, "%")[0]
@@ -183,7 +183,7 @@ func (c *CoinCrawler) checkCoinPremium() bool {
 			break
 		}
 	}
-	log.Debugf("Binance: %d, UPbit: %d (%.2f%%)", binance, upbit, premium)
+	log.Debugf("Binance: %s, UPbit: %s (%.2f%%)", binance, upbit, premium)
 
 	if premium < -5.0 {
 		return true
