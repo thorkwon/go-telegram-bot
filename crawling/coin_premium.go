@@ -135,6 +135,12 @@ func (c *CoinCrawler) getCoinPremium() string {
 	var upbit string
 	var premium float64
 
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("Recovered: ", r)
+		}
+	}()
+
 	for i := 0; i < count; i++ {
 		str, _ := data.At(i).Text()
 		if strings.Contains(str, "XLM") {
@@ -166,6 +172,12 @@ func (c *CoinCrawler) checkCoinPremium() bool {
 	var binance string
 	var upbit string
 	var premium float64
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("Recovered: ", r)
+		}
+	}()
 
 	for i := 0; i < count; i++ {
 		str, _ := data.At(i).Text()
