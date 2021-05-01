@@ -57,9 +57,9 @@ func (c *CoinCrawler) crawlingProcess() {
 				if c.checkCoinPremium() {
 					log.Debug("Occurs premium")
 
-					// Keep premium for 5 min
+					// Check keep premium
 					checkCnt++
-					if checkCnt == 5 {
+					if checkCnt == 1 {
 						msg := c.getCoinPremium()
 						log.Debug("send msg : ", msg)
 						c.cb(msg, c.arg)
@@ -171,7 +171,7 @@ func (c *CoinCrawler) checkCoinPremium() bool {
 		}
 	}
 	c.premiumMsg = fmt.Sprintf("[%s]\nBinance: %s, UPbit: %s (%.2f%%)", c.coinName, binance, upbit, premium)
-	log.Debugf(c.premiumMsg)
+	log.Debug(c.premiumMsg)
 
 	if premium < -5.0 {
 		return true
