@@ -15,21 +15,28 @@ func init() {
 }
 
 type CoinCrawler struct {
-	driver *agouti.WebDriver
-	page   *agouti.Page
-	cb     func(string, interface{})
-	arg    interface{}
-	done   bool
-	isDone chan bool
+	driver     *agouti.WebDriver
+	page       *agouti.Page
+	cb         func(string, interface{})
+	arg        interface{}
+	done       bool
+	isDone     chan bool
+	coinName   string
+	premiumMsg string
 }
 
 func NoticeCoinPremium(cb func(string, interface{}), arg interface{}) *CoinCrawler {
 	obj := &CoinCrawler{isDone: make(chan bool)}
+	obj.setCoinName("XLM")
 	obj.setCbFunc(cb, arg)
 
 	go obj.crawlingProcess()
 
 	return obj
+}
+
+func (c *CoinCrawler) setCoinName(name string) {
+	c.coinName = name
 }
 
 func (c *CoinCrawler) setCbFunc(cb func(string, interface{}), arg interface{}) {
@@ -128,39 +135,7 @@ func (c *CoinCrawler) putPage() {
 func (c *CoinCrawler) getCoinPremium() string {
 	log.Debug("get coin premium")
 
-	data := c.page.All("table.type2 > tbody > tr")
-	count, _ := data.Count()
-
-	var binance string
-	var upbit string
-	var premium float64
-
-	defer func() {
-		if r := recover(); r != nil {
-			log.Error("Recovered: ", r)
-		}
-	}()
-
-	for i := 0; i < count; i++ {
-		str, _ := data.At(i).Text()
-		if strings.Contains(str, "XLM") {
-			binance = strings.Split(strings.Split(str, " ")[2], "\n")[1]
-			upbit = strings.Split(strings.Split(str, " ")[3], "\n")[0]
-
-			tmp := strings.Split(strings.Split(str, " ")[3], "\n")[1]
-			tmp = strings.Split(tmp, "%")[0]
-			premium, _ = strconv.ParseFloat(tmp, 64)
-
-			// log.Debug("binance ", binance)
-			// log.Debug("upbit ", upbit)
-			// log.Debug("premium ", premium)
-			break
-		}
-	}
-
-	msg := fmt.Sprintf("Binance: %s, UPbit: %s (%.2f%%)", binance, upbit, premium)
-
-	return msg
+	return c.premiumMsg
 }
 
 func (c *CoinCrawler) checkCoinPremium() bool {
@@ -181,7 +156,7 @@ func (c *CoinCrawler) checkCoinPremium() bool {
 
 	for i := 0; i < count; i++ {
 		str, _ := data.At(i).Text()
-		if strings.Contains(str, "XLM") {
+		if strings.Contains(str, c.coinName) {
 			binance = strings.Split(strings.Split(str, " ")[2], "\n")[1]
 			upbit = strings.Split(strings.Split(str, " ")[3], "\n")[0]
 
@@ -195,7 +170,8 @@ func (c *CoinCrawler) checkCoinPremium() bool {
 			break
 		}
 	}
-	log.Debugf("Binance: %s, UPbit: %s (%.2f%%)", binance, upbit, premium)
+	c.premiumMsg = fmt.Sprintf("[%s]\nBinance: %s, UPbit: %s (%.2f%%)", c.coinName, binance, upbit, premium)
+	log.Debugf(c.premiumMsg)
 
 	if premium < -5.0 {
 		return true
