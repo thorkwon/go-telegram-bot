@@ -64,7 +64,9 @@ func (c *DownloadWatcher) pollingProcess(pollingPath string) {
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					log.Debug("Watcher event : ", event)
 					arrName := strings.Split(event.Name, "/")
-					c.cb(arrName[len(arrName)-1], c.arg)
+					if !strings.HasPrefix(arrName[len(arrName)-1], ".") {
+						c.cb(arrName[len(arrName)-1], c.arg)
+					}
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
