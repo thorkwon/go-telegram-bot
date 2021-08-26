@@ -22,7 +22,7 @@ type DownloadWatcher struct {
 func DownloadPolling(cb func(string, interface{}), arg interface{}) *DownloadWatcher {
 	obj := &DownloadWatcher{donePolling: make(chan bool), isDonePolling: make(chan bool)}
 
-	filePath, err := utils.GetConfigData("qbit_downloads_dir")
+	filePath, err := utils.GetConfigValue("watch", "downloads_dir")
 	if err != nil {
 		log.Error(err)
 		return nil
