@@ -32,17 +32,17 @@ func DeleteTorrentSeed() error {
 func (q *QbitMacro) setQbitAccount() error {
 	var err error
 
-	q.url, err = utils.GetConfigData("qbit_url")
+	q.url, err = utils.GetConfigValue("qbittorrent", "url")
 	if err != nil {
 		goto ERR
 	}
 
-	q.userName, err = utils.GetConfigData("qbit_username")
+	q.userName, err = utils.GetConfigValue("qbittorrent", "username")
 	if err != nil {
 		goto ERR
 	}
 
-	q.password, err = utils.GetConfigData("qbit_password")
+	q.password, err = utils.GetConfigValue("qbittorrent", "password")
 	if err != nil {
 		goto ERR
 	}
