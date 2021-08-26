@@ -3,12 +3,12 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
 	"strings"
 
+	"github.com/bigkevmcd/go-configparser"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,20 +30,27 @@ func GetConfigDir() (string, error) {
 	return configDir, nil
 }
 
-func GetConfigData(configFile string) (string, error) {
+func GetConfigValue(section string, option string) (string, error) {
 	configDir, err := GetConfigDir()
 	if err != nil {
 		return configDir, err
 	}
 
-	configPath, err := ioutil.ReadFile(configDir + "/" + configFile)
+	configFile := path.Join(configDir, "go-telegram-bot.conf")
+
+	configParser, err := configparser.NewConfigParserFromFile(configFile)
 	if err != nil {
 		return "", err
 	}
 
-	filePath := string(configPath)[:len(configPath)-1]
+	isValue, _ := configParser.HasOption(section, option)
+	if !isValue {
+		return "", errors.New("No such section or option")
+	}
 
-	return filePath, nil
+	value, _ := configParser.Get(section, option)
+
+	return value, nil
 }
 
 func getFileAndLine(path string, line int) string {
