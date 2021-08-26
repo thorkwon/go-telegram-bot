@@ -50,7 +50,7 @@ func NewServiceBot() *ServiceBot {
 }
 
 func (s *ServiceBot) getToken() (string, error) {
-	tokenKey, err := utils.GetConfigData("token_key")
+	tokenKey, err := utils.GetConfigValue("telegram", "token_key")
 	if err != nil {
 		return "", err
 	}
@@ -90,7 +90,7 @@ func (s *ServiceBot) GetChat() map[int64]*chatInfo {
 }
 
 func (s *ServiceBot) setAdminUser() error {
-	adminUser, err := utils.GetConfigData("admin_user")
+	adminUser, err := utils.GetConfigValue("telegram", "admin_user")
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (s *ServiceBot) GetAdminUser() string {
 }
 
 func (s *ServiceBot) setDownloadDir() error {
-	dir, err := utils.GetConfigData("download_dir")
+	dir, err := utils.GetConfigValue("telegram", "downloads_dir")
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (s *ServiceBot) setDownloadDir() error {
 }
 
 func (s *ServiceBot) setTorrentDir() error {
-	dir, err := utils.GetConfigData("torrent_dir")
+	dir, err := utils.GetConfigValue("qbittorrent", "torrent_dir")
 	if err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ func (s *ServiceBot) setTorrentDir() error {
 }
 
 func (s *ServiceBot) setMsgSaveFile() error {
-	watchFile, err := utils.GetConfigData("watch_file")
+	watchFile, err := utils.GetConfigValue("watch", "clipboard_file")
 	if err != nil {
 		return err
 	}
