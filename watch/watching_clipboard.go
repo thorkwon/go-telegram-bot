@@ -24,7 +24,7 @@ type ClipboardWatcher struct {
 func ClipboardPolling(cb func(string, interface{}), arg interface{}) *ClipboardWatcher {
 	obj := &ClipboardWatcher{donePolling: make(chan bool), isDonePolling: make(chan bool)}
 
-	filePath, err := utils.GetConfigData("watch_file")
+	filePath, err := utils.GetConfigValue("watch", "clipboard_file")
 	if err != nil {
 		log.Error(err)
 		return nil
