@@ -15,16 +15,39 @@
 apt install chromium-browser chromium-codecs-ffmpeg chromium-chromedriver
 ```
 
-## Prepare required files:
-- The below files have to in the '~/.config/go-telegram-bot' directory.
+## Prepare required configuration file:
+- The conf file should be written as below.
+- The conf file path : '~/.config/go-telegram-bot/go-telegram-bot.conf'
 ```
+[telegram]
 token_key		# Telegram bot API token
-watch_file		# Watchied file path, Save text path
-download_dir		# Download dir path
 admin_user		# Admin username
-torrent_dir		# Torrent seed download dir path
-qbit_downloads_dir	# Watchied dir path, Completed torrent
-qbit_url		# qBittorrent website url address
-qbit_username		# qBittorrent username
-qbit_password		# qBittorrent user password
+downloads_dir		# Download dir path from chat
+
+[qbittorrent]
+url			# qBittorrent website url address
+username		# qBittorrent username
+password		# qBittorrent user password
+downloads_dir		# Torrent seed download dir path
+
+[watch]
+clipboard_file		# Watchied file path, Save text path
+downloads_dir		# Watchied dir path, Completed torrent
+```
+- e.g. go-telegram-bot.conf
+```
+[telegram]
+token_key =
+admin_user =
+downloads_dir =
+
+[qbittorrent]
+url =
+username =
+password =
+torrent_dir =
+
+[watch]
+clipboard_file =
+downloads_dir =
 ```
