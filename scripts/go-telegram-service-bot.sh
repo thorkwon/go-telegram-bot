@@ -8,7 +8,7 @@ function help()
 	echo "  restart		service restart"
 	echo "  stop			service stop"
 	echo "  start			service start"
-	echo "  log			get service log"
+	echo "  log [line]		get service log"
 	exit 1
 }
 
@@ -31,7 +31,11 @@ case $1 in
 		;;
 	log)
 		echo -e "Press output log: ^c\n"
-		tail -f ~/.config/go-telegram-bot/bot.log
+		if [ -z $2 ]; then
+			tail -f ~/.config/go-telegram-bot/bot.log
+		else
+			tail -n $2 -f ~/.config/go-telegram-bot/bot.log
+		fi
 		;;
 	*)
 		help
