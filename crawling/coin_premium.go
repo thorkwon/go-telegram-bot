@@ -52,14 +52,13 @@ func (c *CoinCrawler) crawlingProcess() {
 	log.Info("Coin premium notification service start")
 	for !c.done {
 		if !flagSentMsg && cycle == 0 {
-			err := c.getPage()
-			if err == nil {
+			if err := c.getPage(); err == nil {
 				if c.checkCoinPremium() {
 					log.Debug("Occurs premium")
 
 					// Check keep premium
 					checkCnt++
-					if checkCnt == 1 {
+					if checkCnt == 2 {
 						msg := c.getCoinPremium()
 						log.Debug("send msg : ", msg)
 						c.cb(msg, c.arg)
