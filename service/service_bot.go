@@ -253,7 +253,7 @@ func (s *ServiceBot) fileHandler(update tgbotapi.Update) {
 		} else if fileName == "" {
 			arr := strings.Split(fileURL, "/")
 			arr = strings.Split(arr[len(arr)-1], ".")
-			times := time.Now().Format("060102_150405")
+			times := time.Now().Format("060102_150405.00000")
 
 			fileName = "file_" + times + "." + arr[len(arr)-1]
 			fileFullPath = s.downloadDir + "/" + fileName
