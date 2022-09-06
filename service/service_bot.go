@@ -246,7 +246,8 @@ func (s *ServiceBot) fileHandler(update tgbotapi.Update) {
 		if fileName != "" {
 			arr := strings.Split(fileName, ".")
 			if arr[len(arr)-1] == "torrent" {
-				fileFullPath = s.torrentDir + "/" + fileName
+				arrFileURL := strings.Split(fileURL, "/")
+				fileFullPath = s.torrentDir + "/" + arrFileURL[len(arrFileURL)-1]
 			} else {
 				fileFullPath = s.downloadDir + "/" + fileName
 			}
