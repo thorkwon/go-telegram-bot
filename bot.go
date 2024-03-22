@@ -45,7 +45,7 @@ func deleteTorrentSeed(seedName string, arg interface{}) {
 	log.Debug("seedname :", seedName)
 
 	msg := fmt.Sprintf("Torrent download complete!!!\n[%s]", seedName)
-	info.service.SendMsg(info.chatID, msg, true, 3600)
+	info.service.SendMsg(info.chatID, msg, true, 600)
 
 	if err := qbit.DeleteTorrentSeed(); err != nil {
 		log.Error(err)
