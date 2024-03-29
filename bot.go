@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/thorkwon/go-telegram-bot/crawling"
+	//"github.com/thorkwon/go-telegram-bot/crawling"
 	"github.com/thorkwon/go-telegram-bot/qbit"
 	"github.com/thorkwon/go-telegram-bot/service"
 	"github.com/thorkwon/go-telegram-bot/utils"
@@ -52,13 +52,13 @@ func deleteTorrentSeed(seedName string, arg interface{}) {
 	}
 }
 
-func sendCoinPremium(data string, arg interface{}) {
-	var info *infoArg = arg.(*infoArg)
+// func sendCoinPremium(data string, arg interface{}) {
+// 	var info *infoArg = arg.(*infoArg)
 
-	log.Debug("call sendCoinPremium")
+// 	log.Debug("call sendCoinPremium")
 
-	info.service.SendMsg(info.chatID, data, false, 0)
-}
+// 	info.service.SendMsg(info.chatID, data, false, 0)
+// }
 
 func getPrivateChatID(service *service.ServiceBot) int64 {
 	chats := service.GetChat()
@@ -79,7 +79,7 @@ func main() {
 	service := service.NewServiceBot()
 	var clipboardWatcher *watch.ClipboardWatcher
 	var downloadWatcher *watch.DownloadWatcher
-	var coinCrawler *crawling.CoinCrawler
+	//var coinCrawler *crawling.CoinCrawler
 
 	if err := service.Start(); err != nil {
 		log.Fatal(err)
@@ -90,12 +90,12 @@ func main() {
 		log.Warn("No such private chat")
 		log.Warn("Clipboard watching service has not started")
 		log.Warn("Download watching service has not started")
-		log.Warn("Coin premium notice service has not started")
+		//log.Warn("Coin premium notice service has not started")
 	} else {
 		info := &infoArg{service: service, chatID: chatID}
 		clipboardWatcher = watch.ClipboardPolling(sendClipboardToChat, info)
 		downloadWatcher = watch.DownloadPolling(deleteTorrentSeed, info)
-		coinCrawler = crawling.NoticeCoinPremium(sendCoinPremium, info)
+		//coinCrawler = crawling.NoticeCoinPremium(sendCoinPremium, info)
 	}
 
 	// Exit
@@ -110,9 +110,9 @@ func main() {
 	if downloadWatcher != nil {
 		downloadWatcher.StopPolling()
 	}
-	if coinCrawler != nil {
-		coinCrawler.Stop()
-	}
+	// if coinCrawler != nil {
+	// 	coinCrawler.Stop()
+	// }
 
 	service.Stop()
 }
